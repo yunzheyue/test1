@@ -1,0 +1,122 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply from: 'version.gradle'
+apply plugin: myGradlePlugin
+//apply plugin:'com.example.buildsrc.test1plugin'
+android {
+    signingConfigs {
+        realeseConfig {
+            keyPassword '1236540'
+            storeFile file('E:/AndroidStudioWorkSpace/keystore/zs119_key.jks')
+            storePassword '1236540'
+            keyAlias '掌上119签名'
+        }
+        vipConfig{
+            keyPassword '1236540'
+            storeFile file('E:/AndroidStudioWorkSpace/keystore/zs119_key.jks')
+            storePassword '1236540'
+            keyAlias '掌上119签名'
+        }
+    }
+    compileSdkVersion 28
+    defaultConfig {
+        applicationId "com.example.androidstudiotest3"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode vCode
+        versionName vName
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+//            配置签名
+            signingConfig signingConfigs.realeseConfig
+        }
+        debug {
+            minifyEnabled false
+        }
+        vip {
+//            这是复制release的配置
+            initWith release
+            //            配置签名
+            signingConfig signingConfigs.vipConfig
+//      打包时能修改修改包名，这样就会在原有的包名后添加.vip变成com.example.androidstudiotest3.vip
+            applicationIdSuffix ".vip"
+        }
+    }
+    task test1 {
+        println "当前版本$vCode ,版本名$vName"
+    }
+    sourceSets {
+        main {
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+            java.srcDirs("test")
+            java {
+                srcDir "src/java1"
+                println "执行了"
+            }
+        }
+        test {
+
+        }
+    }
+    sourceSets.all {
+        println name + "---" + java.srcDirs + "----" + resources + "----" + resources.srcDirs
+    }
+
+//    applicationVariants.all{variant->
+//        variant.outputs.each{output->
+//            if(output.outputFile!=null&&output.outputFile.name.endsWith('.apk')&&
+//                    'release' == variant.buildType.name){
+//            def flavorName=variant.flavorName.startsWith('-')?variant.flavorName.substring(1):variant.flavorName
+//                def apkFile=new File(output.outputFile.getParent(),"${flavorName}_v${variant.versionName}_${buildTime()}.apk")
+//                output.outputFile = apkFile
+//            }
+//        }
+//    }
+
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "testApp_${buildTime()}_${variant.versionCode}v${variant.versionName}_${variant.buildType.name}.apk"
+        }
+    }
+
+}
+
+def buildTime(){
+    def date=new Date()
+    def formattedDate=date.format("yyyyMMddHHmmss")
+    return formattedDate
+}
+
+
+class myGradlePlugin implements Plugin<Project> {
+    @Override
+    void apply(Project target) {
+        target.task("myGradlePluginTask") {
+            println "自定义插件任务"
+        }
+    }
+}
+
+buildscript {
+    dependencies {
+        classpath files("libs/test1.jar")
+    }
+}
+
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
+
